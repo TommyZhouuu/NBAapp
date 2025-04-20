@@ -13,16 +13,22 @@ export default function RegisterPage() {
   const handleRegister = async () => {
     setError('');
     const res = await fetch('/api/register', {
-      method: 'POST',
-      body: JSON.stringify({ username, email, password }),
-    });
-    const data = await res.json();
-    if (data.error) {
-      setError(data.error);
-    } else {
-      router.push('/login');
-    }
-  };
+  method: 'POST',
+  body: JSON.stringify({ username, email, password }),
+  headers: { 'Content-Type': 'application/json' },
+});
+
+try {
+  const data = await res.json();
+  if (!res.ok) {
+    alert(data.error || 'Register failed');
+  } else {
+    alert('Register success');
+  }
+} catch (e) {
+  alert('Server error: invalid response');
+}
+
 
   return (
     <div className="min-h-screen bg-white text-black">
