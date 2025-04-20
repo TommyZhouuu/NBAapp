@@ -4,80 +4,54 @@ import { useRouter } from 'next/navigation';
 import Navbar from '@/components/navbar';
 
 export default function LoginPage() {
-  const [username, setUsername] = useState('');
+  const [usernameOrEmail, setUsernameOrEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
   const router = useRouter();
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
+  const handleLogin = async () => {
+    setError('');
     const res = await fetch('/api/login', {
       method: 'POST',
-      body: JSON.stringify({ username, password }),
+      body: JSON.stringify({ usernameOrEmail, password }),
     });
-
     const data = await res.json();
-    if (res.ok) {
+    if (data.error) {
+      setError(data.error);
+    } else {
       localStorage.setItem('token', data.token);
-      localStorage.setItem('username', username); // 👈 添加这一行
-      alert('Login success!');
       router.push('/');
-    }
-    else {
-      alert(data.error);
     }
   };
 
   return (
-    <div style={{ backgroundColor: '#fff', minHeight: '100vh', color: '#000' }}>
+    <div className="min-h-screen bg-white text-black">
       <Navbar />
-      <div style={{ maxWidth: '400px', margin: '3rem auto', textAlign: 'center' }}>
-        <h1 style={{ fontSize: '2rem', fontWeight: 'bold' }}>🔐 Login</h1>
-        <form onSubmit={handleLogin} style={{ marginTop: '2rem' }}>
+      <div className="flex justify-center items-center py-24">
+        <div className="w-full max-w-md bg-gray-100 p-8 rounded shadow">
+          <h1 className="text-2xl font-bold mb-6 text-center">Login</h1>
           <input
             type="text"
-            placeholder="Username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            style={{
-              width: '100%',
-              padding: '0.75rem',
-              marginBottom: '1rem',
-              borderRadius: '8px',
-              border: '1px solid #ccc',
-              fontSize: '1rem',
-            }}
+            placeholder="Username or Email"
+            value={usernameOrEmail}
+            onChange={(e) => setUsernameOrEmail(e.target.value)}
+            className="w-full p-2 mb-4 border rounded"
           />
           <input
             type="password"
             placeholder="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            style={{
-              width: '100%',
-              padding: '0.75rem',
-              marginBottom: '1.5rem',
-              borderRadius: '8px',
-              border: '1px solid #ccc',
-              fontSize: '1rem',
-            }}
+            className="w-full p-2 mb-6 border rounded"
           />
           <button
-            type="submit"
-            style={{
-              width: '100%',
-              padding: '0.75rem',
-              backgroundColor: '#007bff',
-              color: '#fff',
-              border: 'none',
-              borderRadius: '8px',
-              fontSize: '1rem',
-              fontWeight: 'bold',
-              cursor: 'pointer',
-            }}
+            onClick={handleLogin}
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded"
           >
             Login
           </button>
-        </form>
+          {error && <p className="text-red-600 mt-4 text-center">{error}</p>}
+        </div>
       </div>
     </div>
   );

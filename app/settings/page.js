@@ -1,88 +1,143 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import Navbar from '@/components/navbar';
 
-export default function Settings() {
-  const [username, setUsername] = useState('');
-  const router = useRouter();
+export default function SettingsPage() {
+  const [userInfo, setUserInfo] = useState({ username: '', email: '' });
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [message, setMessage] = useState('');
 
   useEffect(() => {
     const token = localStorage.getItem('token');
-    const user = localStorage.getItem('username');
-    if (token && user) {
-      setUsername(user);
+    if (token) {
+      const decoded = JSON.parse(atob(token.split('.')[1]));
+      setUserInfo({
+        username: decoded.username || '',
+        email: decoded.email || '',
+      });
     }
   }, []);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
-    localStorage.removeItem('username');
-    router.push('/login');
+    window.location.href = '/';
   };
 
-  const handleLogin = () => {
-    router.push('/login');
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    const formData = {
+      name,
+      email,
+      message,
+    };
+
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+
+      const result = await res.json();
+
+      if (res.ok) {
+        alert('Message sent successfully!');
+        setName('');
+        setEmail('');
+        setMessage('');
+      } else {
+        alert(result.error || 'Failed to send message');
+      }
+    } catch (err) {
+      console.error('Submit failed:', err);
+      alert('An error occurred while sending your message.');
+    }
   };
 
   return (
-    <div style={{ backgroundColor: '#fff', color: '#000', minHeight: '100vh' }}>
+    <div className="min-h-screen bg-white text-black">
       <Navbar />
-      <div style={{ maxWidth: '800px', margin: '0 auto', padding: '2rem' }}>
-        <h1 style={{ fontSize: '2.5rem', fontWeight: 'bold', marginBottom: '2rem', textAlign: 'center' }}>
-          ⚙️ Settings
-        </h1>
+      <div className="flex flex-col items-center gap-10 py-20">
 
-        <div
-          style={{
-            backgroundColor: '#f2f2f2',
-            padding: '1.5rem',
-            borderRadius: '0.5rem',
-            boxShadow: '0 2px 5px rgba(0, 0, 0, 0.1)',
-          }}
-        >
-          <h2 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '1rem' }}>
-            Account
-          </h2>
-
-          {username ? (
-            <>
-              <p>Welcome, <strong>{username}</strong></p>
-              <button
-                onClick={handleLogout}
-                style={{
-                  marginTop: '1rem',
-                  padding: '0.5rem 1rem',
-                  backgroundColor: '#dc3545',
-                  color: '#fff',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                }}
-              >
-                Log out
-              </button>
-            </>
-          ) : (
-            <>
-              <p>You are not logged in.</p>
-              <button
-                onClick={handleLogin}
-                style={{
-                  marginTop: '1rem',
-                  padding: '0.5rem 1rem',
-                  backgroundColor: '#007bff',
-                  color: '#fff',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                }}
-              >
-                Log in
-              </button>
-            </>
-          )}
+        {/* Account Info */}
+        <div className="w-full max-w-lg bg-gray-100 p-8 rounded shadow">
+          <h1 className="text-2xl font-bold mb-6 text-center">⚙️ Settings</h1>
+          <h2 className="text-lg font-semibold mb-2">Account</h2>
+          <p>Username: <span className="font-bold">{userInfo.username}</span></p>
+          <p>Email: <span className="font-bold">{userInfo.email}</span></p>
+          <button
+            onClick={handleLogout}
+            className="mt-6 bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded"
+          >
+            Log out
+          </button>
         </div>
+
+        {/* Developer Info */}
+        <div className="w-full max-w-lg bg-gray-100 p-6 rounded shadow">
+          <h2 className="text-lg font-semibold mb-2">Developer</h2>
+          <p>Name: <span className="font-bold">Xuesong</span></p>
+          <p>Email: <span className="font-bold">xzhou145@myseneca.ca</span></p>
+        </div>
+
+        {/* Contact Us */}
+        <div className="w-full max-w-lg bg-gray-100 p-6 rounded shadow">
+          <h2 className="text-lg font-semibold mb-4">Contact Us</h2>
+          <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
+            <div>
+              <label className="block mb-1 font-medium" htmlFor="name">Name<span className="text-red-500">*</span></label>
+              <input
+                type="text"
+                id="name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+                className="w-full border border-gray-300 px-3 py-2 rounded"
+              />
+            </div>
+            <div>
+              <label className="block mb-1 font-medium" htmlFor="email">Email<span className="text-red-500">*</span></label>
+              <input
+                type="email"
+                id="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="w-full border border-gray-300 px-3 py-2 rounded"
+              />
+            </div>
+            <div>
+              <label className="block mb-1 font-medium" htmlFor="message">Message</label>
+              <textarea
+                id="message"
+                rows="4"
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                className="w-full border border-gray-300 px-3 py-2 rounded"
+              ></textarea>
+            </div>
+            <button
+              type="submit"
+              className="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 transition"
+            >
+              Submit
+            </button>
+          </form>
+        </div>
+
+
+        <div className="w-full max-w-lg bg-gray-100 p-6 rounded shadow text-center">
+            <h2 className="text-lg font-semibold mb-4">Thanks to Professor Shahdad Shariatmadari</h2>
+              <img
+                 src="/images/p.jpg"
+                alt="Professor Shahdad Shariatmadari"
+                className="mx-auto rounded-full w-24 h-24 object-cover mb-4"
+              />
+        </div>
+
+
       </div>
     </div>
   );

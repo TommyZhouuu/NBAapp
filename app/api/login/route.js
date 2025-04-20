@@ -8,37 +8,33 @@ const SECRET = process.env.JWT_SECRET;
 
 export async function POST(req) {
   try {
-    // Parsing request body
-    const { username, password } = await req.json();
+    const { usernameOrEmail, password } = await req.json();
 
-    // Input validation
-    if (!username || !password) {
-      return NextResponse.json({ error: 'Username and password are required' }, { status: 400 });
+    if (!usernameOrEmail || !password) {
+      return NextResponse.json({ error: 'Missing credentials' }, { status: 400 });
     }
 
-    // Connect to the database
     await connectDB();
 
-    // Find user in the database
-    const user = await User.findOne({ username });
+    const user = await User.findOne({ $or: [{ username: usernameOrEmail }, { email: usernameOrEmail }] });
     if (!user) {
       return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
     }
 
-    // Compare the password with the hashed password stored in the database
     const match = await bcrypt.compare(password, user.password);
     if (!match) {
       return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
     }
 
-    // Create JWT token with user details
-    const token = jwt.sign({ userId: user._id, username }, SECRET, { expiresIn: '1h' });
+    const token = jwt.sign(
+      { userId: user._id, username: user.username, email: user.email },
+      SECRET,
+      { expiresIn: '1h' }
+    );
+    
 
-    // Return the token as a response
     return NextResponse.json({ token });
   } catch (error) {
-    // Handle any errors
-    console.error(error);
-    return NextResponse.json({ error: 'An error occurred during login' }, { status: 500 });
+    return NextResponse.json({ error: 'Login error' }, { status: 500 });
   }
 }

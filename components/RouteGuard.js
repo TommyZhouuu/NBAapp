@@ -1,6 +1,8 @@
 // components/RouteGuard.js
+'use client';
+
 import { useEffect } from 'react';
-import { useRouter } from 'next/router';
+import { useRouter } from 'next/navigation';
 import { useAtom } from 'jotai';
 import { favoritesAtom } from '../utils/favoritesAtom';
 import { searchHistoryAtom } from '../utils/searchAtom';
